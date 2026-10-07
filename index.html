@@ -111,7 +111,14 @@ h1 em{font-style:italic;color:var(--sage-deep)}
 
 /* ---------- MARQUEE ---------- */
 .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--ink);color:var(--cream);overflow:hidden;padding:15px 0}
-.marquee .track{display:flex;white-space:nowrap;width:max-content;animation:slide 34s linear infinite}
+/* Mask lives on this wrapper, NOT on .track: a mask moves with transform, so on the
+   track the fade would travel along with the text instead of staying pinned to the
+   edges. Keeping the ink background off this layer also leaves the bar crisp. */
+.marquee-mask{
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 72px,#000 calc(100% - 72px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 72px,#000 calc(100% - 72px),transparent)
+}
+.marquee .track{display:flex;white-space:nowrap;width:max-content;animation:slide 68s linear infinite}
 .marquee span{font-family:var(--serif);font-size:19px;letter-spacing:.02em;padding:0 26px;display:inline-flex;align-items:center;gap:26px}
 .marquee span::after{content:"✦";font-size:11px;color:var(--butter)}
 @keyframes slide{to{transform:translateX(-50%)}}
@@ -239,6 +246,14 @@ footer .meta b{color:var(--ink);font-weight:600}
 }
 @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){
+  .marquee{padding:12px 0}
+  .marquee-mask{
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)
+  }
+  .marquee .track{animation-duration:37s}
+  .marquee span{font-size:13px;padding:0 14px;gap:12px}
+  .marquee span::after{font-size:9px}
   section{padding:74px 6vw}
   .sec-head{align-items:flex-start}
   .sec-head .aside{text-align:left}
@@ -294,9 +309,16 @@ footer .meta b{color:var(--ink);font-weight:600}
 
 <!-- ================= MARQUEE ================= -->
 <div class="marquee" aria-hidden="true">
-  <div class="track">
-    <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
-    <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
+  <div class="marquee-mask">
+    <div class="track">
+      <!-- One copy = the four phrases on each line. Repeated 4x so translateX(-50%)
+           always lands on an identical copy (seamless loop) and the track stays
+           wider than any screen. -->
+      <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
+      <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
+      <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
+      <span>Low sugar</span><span>No recipe</span><span>Made by hand</span><span>Shared with others</span>
+    </div>
   </div>
 </div>
 
@@ -489,6 +511,8 @@ footer .meta b{color:var(--ink);font-weight:600}
     <figure class="reveal"><img src="images/grapefruit-sago.jpg" alt="Grapefruit sago shake"><figcaption><b>Grapefruit sago</b><span>Less sugar, more sparkle</span></figcaption></figure>
     <figure class="reveal"><img src="images/mango-pudding.jpg" alt="Mango pudding"><figcaption><b>Mango pudding</b><span>Made to be shared</span></figcaption></figure>
     <figure class="reveal"><img src="images/juice.jpg" alt="Mango pomelo sago"><figcaption><b>Juice</b><span>Made by the youngest hands</span></figcaption></figure>
+    <figure class="reveal"><img src="images/roll-cake-oven.jpg" alt="A roll cake baking in the oven"><figcaption><b>Roll cake, in the oven</b><span>Watching it rise</span></figcaption></figure>
+    <figure class="reveal"><img src="images/swan-cream-slice.jpg" alt="A cream roll slice topped with a swan"><figcaption><b>Swan cream slice</b><span>Whipped cream, sculpted</span></figcaption></figure>
   </div>
 </section>
 
