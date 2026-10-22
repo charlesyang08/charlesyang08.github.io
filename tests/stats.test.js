@@ -64,7 +64,9 @@ test('getStats filters bots, buckets by Shanghai day, and fills the series', asy
   assert.equal(dailyCall.args[0], '2026-10-20T16:00:00.000Z');
 
   const cityCall = db.calls.find((c) => /GROUP BY city/.test(c.sql));
-  assert.match(cityCall.sql, /region/);
+  assert.match(cityCall.sql, /MAX\(region\)/);
+  assert.match(cityCall.sql, /GROUP BY city, country/);
+  assert.doesNotMatch(cityCall.sql, /GROUP BY city, region/);
   const recentCall = db.calls.find((c) => /ORDER BY ts DESC/.test(c.sql));
   assert.match(recentCall.sql, /region/);
 });

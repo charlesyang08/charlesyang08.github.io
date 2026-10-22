@@ -16,3 +16,11 @@ test('visits table stores exactly the documented fields', () => {
 
   assert.deepEqual(columns, ['id', 'ts', 'ip', 'country', 'region', 'city', 'referrer', 'is_bot']);
 });
+
+test('region migration adds exactly the region column', () => {
+  const migration = readFileSync(
+    new URL('../worker/migrations/0002_add_region.sql', import.meta.url),
+    'utf8'
+  ).trim();
+  assert.equal(migration, 'ALTER TABLE visits ADD COLUMN region TEXT;');
+});

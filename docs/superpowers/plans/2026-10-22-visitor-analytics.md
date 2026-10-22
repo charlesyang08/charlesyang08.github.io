@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - **所有网页端交付物必须全英文，不得出现任何中文字符**：`index.html`、`stats.html`、`assets/stats-app.js`、`worker/src/*.js`、`worker/schema.sql`、`worker/wrangler.toml`。注释、UI 文案、错误信息都算。`worker/README.md` 与 `docs/` 下的文档可以用中文。
-- 只记录六个字段：`ts`、`ip`、`country`、`city`、`referrer`、`is_bot`。**不记录也不展示 User-Agent、运营商 / ASN、设备、屏幕、语言、访问路径。** UA 只允许在 Worker 内存中用于判断 `is_bot`，绝不写库。
+- 只记录七个字段：`ts`、`ip`、`country`、`region`、`city`、`referrer`、`is_bot`。**不记录也不展示 User-Agent、运营商 / ASN、设备、屏幕、语言、访问路径。** UA 只允许在 Worker 内存中用于判断 `is_bot`，绝不写库。
 - 只用免费额度：Workers Free（10 万请求/天）、D1 Free（5GB、500 万读/天、10 万写/天）；不引入自定义域名、不引入付费服务。
 - D1 绑定名固定为 `DB`；环境变量 `ALLOWED_ORIGIN=https://charlesyang08.github.io`；密钥变量名 `STATS_KEY`。
 - 时间存 UTC ISO 字符串；"一天"按 Asia/Shanghai（UTC+8）分桶，SQL 用 `date(ts, '+8 hours')`。
@@ -30,7 +30,7 @@
 3. **超长或畸形的 referrer** → 截断到 255 字符或归一为 `(direct)`，仍然返回 204。由 Task 2 的截断测试覆盖。
 4. **错误、空或缺失的密钥** → 401 且不返回任何数据；即使 `STATS_KEY` 未配置也是 401。由 Task 3 的鉴权测试覆盖。
 5. **D1 不可用或超额** → `/collect` 仍 204；`/stats` 返回 500 `{ "error": "server error" }`，面板显示错误提示而不是假装成功。由 Task 2、Task 3、Task 6 的测试覆盖。
-6. **隐私边界被悄悄突破**（有人后来把 UA 或设备写回库里）→ 行结构测试固定为 6 个字段；英文守卫之外再加一条“SQL 不出现 ua / asn / screen”的检查。由 Task 2 与 Task 3 测试覆盖。
+6. **隐私边界被悄悄突破**（有人后来把 UA 或设备写回库里）→ 行结构测试固定为 7 个字段；英文守卫之外再加一条“SQL 不出现 ua / asn / screen”的检查。由 Task 2 与 Task 3 测试覆盖。
 
 ---
 
@@ -234,7 +234,7 @@ git commit -m "chore: scaffold visitor analytics worker and shared helpers"
 **Interfaces:**
 - Consumes: `isBot`, `normalizeReferrer` from `worker/src/lib.js`。
 - Produces:
-  - `buildVisitRow(input: { headers: Headers, cf: object, body: object, ip: string, now: Date }): unknown[]`，返回 6 个值：`[ts, ip, country, city, referrer, is_bot]`。
+  - `buildVisitRow(input: { headers: Headers, cf: object, body: object, ip: string, now: Date }): unknown[]`，返回 7 个值：`[ts, ip, country, region, city, referrer, is_bot]`。
   - `handleCollect(request: Request, env: { DB: D1Database }, cf: object, now?: Date): Promise<Response>`，恒返回 204。
 
 - [ ] **Step 1: 写测试辅助 `tests/helpers.js`**
@@ -404,7 +404,7 @@ Expected: FAIL，找不到 `worker/src/collect.js`。
 - `referrer` 用 `normalizeReferrer(body.referrer, 'charlesyang08.github.io')`，再 `slice(0, 255)`。
 - `is_bot` 用 `isBot(headers.get('User-Agent'))`；UA 不进入返回值。
 - `handleCollect` 先 `request.text()`，长度 > 2048 直接 204；`JSON.parse` 失败也 204；`env.DB.prepare(...).bind(...).run()` 外层 `try/catch` 吞掉所有异常。
-- INSERT 写成 `INSERT INTO visits (ts, ip, country, city, referrer, is_bot) VALUES (?,?,?,?,?,?)`，6 个占位符。
+- INSERT 写成 `INSERT INTO visits (ts, ip, country, region, city, referrer, is_bot) VALUES (?,?,?,?,?,?,?)`，7 个占位符。
 
 - [ ] **Step 5: 运行测试确认通过**
 
@@ -1118,7 +1118,7 @@ Expected：面板显示 curl 测试行和站主本次访问；无口令或错口
 ## 验收标准（来自 Spec）
 
 - [ ] 部署后 curl 与真实浏览器各产生一条含正确 IP / 国家 / 城市 / 来源的记录。
-- [ ] 数据库中只有 6 个字段，没有 UA、运营商、设备、屏幕或语言。
+- [ ] 数据库中只有 7 个字段，没有 UA、运营商、设备、屏幕或语言。
 - [ ] 无口令或错口令时 `stats.html` 不显示任何数据，且返回 401。
 - [ ] 面板有：访问量趋势、来源 Top、国家 / 城市排行、最近明细；机器人默认过滤、可切换。
 - [ ] 手机窄屏打开面板不横向溢出。

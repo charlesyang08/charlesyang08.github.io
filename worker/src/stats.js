@@ -62,7 +62,7 @@ export async function getStats(db, { days, includeBots, now }) {
       .all(),
     db
       .prepare(
-        `SELECT city, region, country, COUNT(*) AS visits FROM visits WHERE ts >= ?${botClause} GROUP BY city, region, country ORDER BY visits DESC LIMIT 10`
+        `SELECT city, MAX(region) AS region, country, COUNT(*) AS visits FROM visits WHERE ts >= ?${botClause} GROUP BY city, country ORDER BY visits DESC LIMIT 10`
       )
       .bind(startIso)
       .all(),

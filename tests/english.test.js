@@ -11,6 +11,7 @@ const FILES = [
   'worker/src/collect.js',
   'worker/src/stats.js',
   'worker/schema.sql',
+  'worker/migrations/0002_add_region.sql',
   'worker/wrangler.toml',
 ];
 const CJK = /[㐀-䶿一-鿿豈-﫿]/;
