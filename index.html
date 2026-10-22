@@ -10,7 +10,8 @@
   HOW TO EDIT THIS SITE
   ------------------------------------------------------------
   • Photos live in:   D:\Dessert\Baking2\hongbei\   and
-                      D:\Dessert\烘焙日常：派、蛋糕和打发奶油\
+                      D:\Dessert\<baking diary folder>\
+    The second folder's name is written in Chinese; it holds pies, cakes, and whipped cream.
     Each image is written as a path relative to D:\Dessert\.
     Keep this file in  D:\Dessert\  and the photos will load.
   • To add a photo: copy this block into any gallery and change
@@ -222,6 +223,7 @@ footer{padding:60px 6vw 40px;border-top:1px solid var(--line);display:flex;justi
 footer .big{font-family:var(--serif);font-size:clamp(24px,3vw,38px);letter-spacing:-.03em;line-height:1.05}
 footer .meta{font-size:11px;letter-spacing:.1em;color:var(--muted);text-align:right;line-height:1.9}
 footer .meta b{color:var(--ink);font-weight:600}
+footer .privacy-note{font-size:10px;letter-spacing:.04em;text-transform:none;color:var(--muted);opacity:.8}
 
 /* ---------- REVEAL ---------- */
 .js .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
@@ -534,6 +536,7 @@ footer .meta b{color:var(--ink);font-weight:600}
     <div>Dessert Studio · Suzhou, China</div>
     <div><a href="mailto:charles_yang2008@163.com">charles_yang2008@163.com</a></div>
     <div style="margin-top:10px">Made by hand. Lower in sugar. Free of recipes.</div>
+    <div class="privacy-note" style="margin-top:10px">This site keeps anonymous visit statistics (IP address and approximate location) to understand its audience.</div>
   </div>
 </footer>
 
@@ -548,6 +551,20 @@ document.documentElement.classList.add('js');
     });
   },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
   els.forEach(function(e,i){e.style.transitionDelay=(Math.min(i%6,5)*70)+'ms';io.observe(e);});
+})();
+</script>
+
+<script id="visit-beacon">
+(function () {
+  var ENDPOINT = 'https://visitor-stats.example.workers.dev/collect';
+  try {
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referrer: document.referrer }),
+      keepalive: true
+    }).catch(function () {});
+  } catch (e) {}
 })();
 </script>
 </body>
