@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Visitor Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FAF6EC;
+  --paper:#FFFDF8;
+  --ink:#26302A;
+  --muted:#6E7770;
+  --sage:#7C9773;
+  --sage-deep:#4F684A;
+  --clay:#E2A98F;
+  --line:#E1E5DA;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Inter",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--sans);line-height:1.55}
+h1,h2,p{margin:0}
+h1{font-family:var(--serif);font-size:clamp(28px,4vw,44px);font-weight:500;letter-spacing:-.02em}
+h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-deep);margin-bottom:14px}
+main.shell{max-width:1200px;margin:0 auto;padding:40px 16px 64px}
+.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--sage-deep);font-weight:600;margin-bottom:8px}
+.lede{color:var(--muted);margin-top:6px}
+.gate{max-width:420px;margin:12vh auto;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:32px;box-shadow:0 20px 50px rgba(38,48,42,.08)}
+.gate form{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.gate label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+input[type=password]{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:16px;color:var(--ink)}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:10px 14px;border-radius:10px}
+button:hover{border-color:var(--sage)}
+button[type=submit]{background:var(--sage-deep);border-color:var(--sage-deep);color:#fff;font-weight:600}
+.error{color:#a33;font-size:13px;min-height:18px}
+.topbar{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ranges{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.ranges button{border:0;border-radius:0;background:transparent}
+.ranges button.active{background:var(--sage-deep);color:#fff}
+.toggle{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.ghost{background:transparent}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.card strong{font-family:var(--serif);font-size:30px;font-weight:500}
+.grid{display:grid;gap:14px;margin-bottom:18px}
+.grid.two{grid-template-columns:1fr 1fr}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px}
+.grid .panel{margin-bottom:0}
+.chart{position:relative;height:280px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr:last-child td{border-bottom:0}
+.num{text-align:right}
+.status{min-height:20px;color:var(--muted);font-size:13px}
+.updated{color:var(--muted);font-size:11px;margin-bottom:18px}
+.muted{color:var(--muted)}
+@media (max-width:800px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .grid.two{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  .cards{grid-template-columns:1fr}
+  main.shell{padding:24px 16px 48px}
+  .gate{margin:6vh auto;padding:24px}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section id="gate" class="gate">
+    <p class="eyebrow">Private dashboard</p>
+    <h1>Visitor Log</h1>
+    <p class="lede">A private view of who stops by.</p>
+    <form id="gate-form">
+      <label for="key-input">Access key</label>
+      <input id="key-input" type="password" autocomplete="current-password" required>
+      <button type="submit">Open dashboard</button>
+      <p id="gate-error" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Private dashboard</p>
+        <h1>Visitor Log</h1>
+        <p class="lede">A private view of who stops by.</p>
+      </div>
+      <div class="controls">
+        <div class="ranges" role="group" aria-label="Time range">
+          <button type="button" data-days="7">7 days</button>
+          <button type="button" data-days="30" class="active">30 days</button>
+          <button type="button" data-days="90">90 days</button>
+        </div>
+        <label class="toggle"><input id="bots-toggle" type="checkbox"> Include bots</label>
+        <button id="sign-out" type="button" class="ghost">Sign out</button>
+      </div>
+    </header>
+
+    <p id="status" class="status" aria-live="polite"></p>
+    <p id="updated" class="updated"></p>
+
+    <div class="cards">
+      <article class="card"><span>Visits</span><strong id="stat-visits">0</strong></article>
+      <article class="card"><span>Unique visitors</span><strong id="stat-uniques">0</strong></article>
+      <article class="card"><span>Countries</span><strong id="stat-countries">0</strong></article>
+      <article class="card"><span>Referrers</span><strong id="stat-referrers">0</strong></article>
+    </div>
+
+    <div class="grid two">
+      <section class="panel">
+        <h2>Visits over time</h2>
+        <div class="chart"><canvas id="daily-chart"></canvas></div>
+      </section>
+      <section class="panel">
+        <h2>Top sources</h2>
+        <div class="chart"><canvas id="referrer-chart"></canvas></div>
+      </section>
+    </div>
+
+    <div class="grid two">
+      <section class="panel">
+        <h2>Countries</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Country</th><th class="num">Visits</th></tr></thead>
+            <tbody id="country-body"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Cities</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>City</th><th>Country</th><th class="num">Visits</th></tr></thead>
+            <tbody id="city-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>Recent visits</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Time</th><th>IP</th><th>Location</th><th>Source</th></tr></thead>
+          <tbody id="recent-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="module" src="./assets/stats-app.js"></script>
+</body>
+</html>

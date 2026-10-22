@@ -6,7 +6,7 @@
 
 **Architecture:** `index.html` 末尾的小脚本把来源页 POST 到 Cloudflare Worker；Worker 从请求本身读取真实 IP 与 `request.cf` 的国家 / 城市并写入 D1；`stats.html`（GitHub Pages 上的静态页）用 Bearer 密钥调用 Worker 的 `/stats` 聚合接口并渲染图表。免费额度内运行，无需自定义域名。
 
-**Tech Stack:** Cloudflare Workers（ES modules）、D1（SQLite）、Wrangler、Node.js 24 内置 `node:test`、原生 HTML/CSS/JS、Chart.js 4.4.7（cdnjs）。
+**Tech Stack:** Cloudflare Workers（ES modules）、D1（SQLite）、Wrangler、Node.js 24 内置 `node:test`、原生 HTML/CSS/JS、Chart.js 4.4.1（cdnjs）。
 
 **Spec:** `docs/superpowers/specs/2026-10-22-visitor-analytics-design.md`
 
