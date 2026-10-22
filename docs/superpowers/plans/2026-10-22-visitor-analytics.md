@@ -1108,6 +1108,13 @@ Expected：面板显示 curl 测试行和站主本次访问；无口令或错口
 
 ---
 
+## 部署后变更（2026-10-22）
+
+- 应站主要求增加 `region`（省 / 州）：`schema.sql`、采集、聚合、面板、迁移文件 `worker/migrations/0002_add_region.sql` 均已更新。
+- 采集端增加 `Content-Length` 预检，超过 2 KB 的请求在读取 body 之前直接返回 204（评审 Important）。
+- 面板新增 `formatLocation(city, region, country)`，重复地名去重；城市表增加 `Region` 列。
+- `is_bot` 的 UA 仅用于内存判断，仍不落库；`region` 是新增的第七个数据字段。
+
 ## 验收标准（来自 Spec）
 
 - [ ] 部署后 curl 与真实浏览器各产生一条含正确 IP / 国家 / 城市 / 来源的记录。

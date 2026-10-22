@@ -24,6 +24,21 @@ export function formatCountry(code) {
   }
 }
 
+export function formatLocation(city, region, country) {
+  const parts = [];
+  if (city) parts.push(city);
+  if (region) parts.push(region);
+
+  const countryName = country ? formatCountry(country) : '';
+  if (countryName && countryName !== 'Unknown') parts.push(countryName);
+
+  const unique = [];
+  for (const part of parts) {
+    if (!unique.some((value) => value.toLowerCase() === part.toLowerCase())) unique.push(part);
+  }
+  return unique.length ? unique.join(', ') : 'Unknown';
+}
+
 export function formatCount(value) {
   return Number(value || 0).toLocaleString('en-US');
 }
@@ -83,10 +98,6 @@ function makeRow(cells) {
   return row;
 }
 
-function locationLabel(city, country) {
-  const place = formatCountry(country);
-  return city ? `${city}, ${place}` : place;
-}
 
 function renderCountries(rows) {
   const body = byId('country-body');
@@ -104,13 +115,16 @@ function renderCities(rows) {
   const body = byId('city-body');
   body.textContent = '';
   if (!rows.length) {
-    body.appendChild(makeRow([makeCell('No data', 'muted'), makeCell(''), makeCell('', 'num')]));
+    body.appendChild(
+      makeRow([makeCell('No data', 'muted'), makeCell(''), makeCell(''), makeCell('', 'num')])
+    );
     return;
   }
   for (const row of rows) {
     body.appendChild(
       makeRow([
         makeCell(row.city || 'Unknown'),
+        makeCell(row.region || '—'),
         makeCell(formatCountry(row.country)),
         makeCell(formatCount(row.visits), 'num'),
       ])
@@ -132,7 +146,7 @@ function renderRecent(rows) {
       makeRow([
         makeCell(new Date(row.ts).toLocaleString()),
         makeCell(row.ip || 'Unknown'),
-        makeCell(locationLabel(row.city, row.country)),
+        makeCell(formatLocation(row.city, row.region, row.country)),
         makeCell(row.referrer || '(direct)'),
       ])
     );
@@ -306,6 +320,7 @@ export function init() {
     if (result.ok) {
       writeStoredKey(key);
       showApp();
+      for (const chart of state.charts) chart.resize();
     } else {
       gateError.textContent = result.message;
     }

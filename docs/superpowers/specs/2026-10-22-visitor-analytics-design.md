@@ -8,13 +8,13 @@
 站点 `charlesyang08.github.io` 是一个纯静态的甜品作品集（单个 `index.html`，GitHub Pages 托管）。
 站主想知道：**谁在什么时候来看过、从哪里来、访问量大概多少**。
 
-"谁" 的粒度已确认：IP + 城市，不记录运营商、设备或 User-Agent。站主接受这一限制。
+"谁" 的粒度已确认：IP + 城市 + 省 / 州，不记录运营商、设备或 User-Agent。站主接受这一限制。
 
 ## 2. 目标与非目标
 
 ### 目标
-- 记录每一次页面访问：精确时间（UTC）、真实 IP、国家、城市、来源页。
-- 提供一个**桌面优先、带图表**的查看面板：访问量趋势、来源排行、国家 / 城市排行、最近访问明细。
+- 记录每一次页面访问：精确时间（UTC）、真实 IP、国家、省 / 州、城市、来源页。
+- 提供一个**桌面优先、带图表**的查看面板：访问量趋势、来源排行、国家 / 城市（含省 / 州）排行、最近访问明细。
 - 全部运行在免费额度内，不绑信用卡。
 - 尽量少改动现有站点：`index.html` 只加一个很小的采集脚本和一行隐私说明。
 
@@ -49,7 +49,7 @@
   ▼
 Cloudflare Worker  (visitor-stats.<account>.workers.dev)
   │  - 读取 CF-Connecting-IP
-  │  - 读取 request.cf: country / city
+  │  - 读取 request.cf: country / region / city
   │  - UA 仅在内存中用于 bot 判定，不写入数据库
   │  - 写入
   ▼
@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS visits (
   ts        TEXT    NOT NULL,   -- ISO 8601 UTC, e.g. 2026-10-22T08:15:03.120Z
   ip        TEXT    NOT NULL,   -- CF-Connecting-IP
   country   TEXT,               -- ISO-3166 alpha-2
+  region    TEXT,               -- province / state
   city      TEXT,
   referrer  TEXT,               -- hostname or "(direct)"
   is_bot    INTEGER DEFAULT 0
@@ -98,7 +99,7 @@ CREATE INDEX IF NOT EXISTS idx_visits_referrer ON visits(referrer);
 { "referrer": "https://..." }
 ```
 - `index.html` 在 `</body>` 前插入的脚本负责发送；同一标签页每次加载发一次，不做停留时长追踪。
-- 服务端补充 IP、国家、城市、服务器时间；UA 只用于判定 `is_bot`，不存储。
+- 服务端补充 IP、国家、省 / 州、城市、服务器时间；UA 只用于判定 `is_bot`，不存储。
 - 成功返回 `204`；任何解析错误也返回 `204`（采集端永不报错、不阻塞页面）。
 - 不校验来源（无法伪造，公开采集端点本就如此），但限制请求体 < 2KB。
 
@@ -110,8 +111,8 @@ CREATE INDEX IF NOT EXISTS idx_visits_referrer ON visits(referrer);
   - `daily`: `[{date, visits, uniques}]`
   - `top_referrers`: `[{referrer, visits}]`（空来源归一为 `(direct)`）
   - `top_countries`: `[{country, visits}]`
-  - `top_cities`: `[{city, country, visits}]`
-  - `recent`: 最近 200 条明细（含时间、IP、国家、城市、来源）
+  - `top_cities`: `[{city, region, country, visits}]`
+  - `recent`: 最近 200 条明细（含时间、IP、国家、省 / 州、城市、来源）
 - 所有聚合都带 `is_bot = 0` 默认过滤；`recent` 同理，面板提供“包含机器人”开关。
 
 ## 7. 查看面板 `stats.html`
@@ -120,8 +121,8 @@ CREATE INDEX IF NOT EXISTS idx_visits_referrer ON visits(referrer);
 - 首次打开要求输入 `STATS_KEY`，校验通过后存 `localStorage`；提供“退出 / 清除口令”。
 - 桌面优先布局（宽度 ≥ 1024px 效果最佳，窄屏可读不崩）：
   - 顶部：时间范围切换 7 / 30 / 90 天；4 个数字卡（总访问、独立访客、来源种类、国家数）。
-  - 中部：按天访问量折线图；来源 Top 10 横向条形图；国家 / 城市两张排行表。
-  - 底部：最近访问明细表（时间本地化显示、IP、城市 / 国家、来源）。
+  - 中部：按天访问量折线图；来源 Top 10 横向条形图；国家 / 城市（含省 / 州）两张排行表。
+  - 底部：最近访问明细表（时间本地化显示、IP、城市 / 省州 / 国家、来源；重复的地名去重）。
   - 一个“包含机器人”开关。
 - 图表库：Chart.js（固定版本，从 cdnjs 加载）；数据全部由 `/stats` 返回，页面不含任何第三方追踪。
 - 图表配色与现有站点的奶油/鼠尾草色系协调，同时适配浅色背景；确保色盲友好（不单靠红绿区分）。
@@ -173,7 +174,7 @@ index.html              末尾加采集脚本 + 页脚隐私说明
 
 ## 11. 验收标准
 
-- 部署后先用 curl、再用真实浏览器各验证一次：D1 中出现一条含正确 IP / 城市 / 来源的记录。
+- 部署后先用 curl、再用真实浏览器各验证一次：D1 中出现一条含正确 IP / 国家 / 省州 / 城市 / 来源的记录。
 - 打开 `stats.html`，无口令或错口令时看不到任何数据；正确口令下能看到图表与明细。
 - 手机窄屏打开面板不横向溢出。
 - 页面加载未因采集脚本报错或明显变慢；被广告拦截器拦截时页面功能不受影响。

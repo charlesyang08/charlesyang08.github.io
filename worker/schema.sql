@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS visits (
   ts        TEXT    NOT NULL,
   ip        TEXT    NOT NULL,
   country   TEXT,
+  region    TEXT,
   city      TEXT,
   referrer  TEXT,
   is_bot    INTEGER DEFAULT 0

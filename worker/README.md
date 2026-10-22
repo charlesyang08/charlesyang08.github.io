@@ -5,7 +5,7 @@
 
 ## 记录什么
 
-只记录：时间（UTC）、IP、国家、城市、来源页、是否机器人。
+只记录：时间（UTC）、IP、国家、省 / 州、城市、来源页、是否机器人。
 
 不记录：User-Agent、运营商 / ASN、设备、屏幕、语言、访问路径。UA 只在 Worker 内存里用于判断 `is_bot`，不会写库。
 明细保留 365 天，每天 03:00 UTC 由 Cron 自动删除旧行。
@@ -64,6 +64,18 @@ npx wrangler deploy --config worker/wrangler.toml
 - `assets/stats-app.js` 里的 `STATS_ENDPOINT`（以 `/stats` 结尾）
 
 然后访问 `https://charlesyang08.github.io/stats.html`，输入 `STATS_KEY`。
+
+控制台也可以完成建库、建表和设置 secret；上面的 CLI 步骤只是为了可复现和可审查。
+
+## 数据库迁移
+
+已有数据库新增 `region`（省 / 州）列时：
+
+```bash
+npx wrangler d1 execute visitor_stats --remote --config worker/wrangler.toml --file worker/migrations/0002_add_region.sql
+```
+
+新建数据库直接执行 `schema.sql` 即可，它已经包含 `region`。
 
 ## 日常维护
 

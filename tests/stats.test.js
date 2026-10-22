@@ -9,9 +9,18 @@ function resolveStats(sql) {
   if (/GROUP BY day/.test(sql)) return [{ day: '2026-10-22', visits: 3, uniques: 2 }];
   if (/GROUP BY referrer/.test(sql)) return [{ referrer: '(direct)', visits: 5 }];
   if (/GROUP BY country/.test(sql)) return [{ country: 'JP', visits: 3 }];
-  if (/GROUP BY city/.test(sql)) return [{ city: 'Tokyo', country: 'JP', visits: 2 }];
+  if (/GROUP BY city/.test(sql)) return [{ city: 'Tokyo', region: 'Tokyo', country: 'JP', visits: 2 }];
   if (/ORDER BY ts DESC/.test(sql))
-    return [{ ts: '2026-10-22T10:00:00.000Z', ip: '203.0.113.9', country: 'JP', city: 'Tokyo', referrer: '(direct)' }];
+    return [
+      {
+        ts: '2026-10-22T10:00:00.000Z',
+        ip: '203.0.113.9',
+        country: 'JP',
+        region: 'Tokyo',
+        city: 'Tokyo',
+        referrer: '(direct)',
+      },
+    ];
   if (/AS bots/.test(sql)) return [{ bots: 2 }];
   if (/AS visits/.test(sql)) return [{ visits: 12, uniques: 9, countries: 3, referrers: 4 }];
   return [];
@@ -53,6 +62,11 @@ test('getStats filters bots, buckets by Shanghai day, and fills the series', asy
   assert.match(dailyCall.sql, /COUNT\(DISTINCT ip\)/);
   assert.match(dailyCall.sql, /is_bot = 0/);
   assert.equal(dailyCall.args[0], '2026-10-20T16:00:00.000Z');
+
+  const cityCall = db.calls.find((c) => /GROUP BY city/.test(c.sql));
+  assert.match(cityCall.sql, /region/);
+  const recentCall = db.calls.find((c) => /ORDER BY ts DESC/.test(c.sql));
+  assert.match(recentCall.sql, /region/);
 });
 
 test('getStats includes bots when asked', async () => {
@@ -66,7 +80,7 @@ test('stats SQL never selects UA, ASN, or device fields', async () => {
   const db = mockDb(resolveStats);
   await getStats(db, { days: 7, includeBots: false, now: NOW });
   for (const call of db.calls) {
-    assert.doesNotMatch(call.sql, /\b(ua|asn|as_org|screen|lang)\b/i);
+    assert.doesNotMatch(call.sql, /\b(ua|user_agent|asn|as_org|screen|lang|language|device)\b/i);
   }
 });
 
@@ -94,8 +108,9 @@ test('handleStats returns aggregates for a valid key', async () => {
   assert.equal(data.range.days, 7);
   assert.equal(data.range.include_bots, true);
   assert.deepEqual(data.top_countries, [{ country: 'JP', visits: 3 }]);
+  assert.deepEqual(data.top_cities, [{ city: 'Tokyo', region: 'Tokyo', country: 'JP', visits: 2 }]);
   assert.equal(data.recent[0].ip, '203.0.113.9');
-  assert.deepEqual(Object.keys(data.recent[0]).sort(), ['city', 'country', 'ip', 'referrer', 'ts']);
+  assert.deepEqual(Object.keys(data.recent[0]).sort(), ['city', 'country', 'ip', 'referrer', 'region', 'ts']);
 });
 
 test('handleStats returns 500 without data when D1 fails', async () => {

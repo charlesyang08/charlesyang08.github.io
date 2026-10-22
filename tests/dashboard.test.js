@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   formatCountry,
+  formatLocation,
   formatCount,
   formatDayLabel,
   buildStatsUrl,
@@ -12,6 +14,18 @@ test('formatCountry falls back safely', () => {
   assert.match(formatCountry('CN'), /China/i);
   assert.equal(formatCountry(null), 'Unknown');
   assert.equal(formatCountry('ZZ'), 'ZZ');
+});
+
+test('formatLocation joins city, region, and country without duplicates', () => {
+  assert.equal(formatLocation('Taoyuan', 'Taiwan', 'TW'), 'Taoyuan, Taiwan');
+  assert.equal(formatLocation('Suzhou', 'Jiangsu', 'CN'), 'Suzhou, Jiangsu, China');
+  assert.equal(formatLocation(null, 'Jiangsu', 'CN'), 'Jiangsu, China');
+  assert.equal(formatLocation(null, null, null), 'Unknown');
+});
+
+test('cities table exposes a region column', () => {
+  const html = readFileSync(new URL('../stats.html', import.meta.url), 'utf8');
+  assert.match(html, /<th>Region<\/th>/);
 });
 
 test('formatCount and formatDayLabel are stable', () => {

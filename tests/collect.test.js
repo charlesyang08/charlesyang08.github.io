@@ -4,10 +4,10 @@ import { buildVisitRow, handleCollect } from '../worker/src/collect.js';
 import { mockDb, jsonRequest } from './helpers.js';
 
 const NOW = new Date('2026-10-22T08:15:03.120Z');
-const CF = { country: 'JP', city: 'Tokyo' };
+const CF = { country: 'JP', region: 'Tokyo', city: 'Tokyo' };
 const ENV = { ALLOWED_ORIGIN: 'https://charlesyang08.github.io' };
 
-test('buildVisitRow stores only ts, ip, country, city, referrer, is_bot', () => {
+test('buildVisitRow stores only ts, ip, country, region, city, referrer, is_bot', () => {
   const row = buildVisitRow({
     headers: new Headers({ 'User-Agent': 'Mozilla/5.0 Chrome/120.0' }),
     cf: CF,
@@ -15,7 +15,15 @@ test('buildVisitRow stores only ts, ip, country, city, referrer, is_bot', () => 
     ip: '203.0.113.9',
     now: NOW,
   });
-  assert.deepEqual(row, ['2026-10-22T08:15:03.120Z', '203.0.113.9', 'JP', 'Tokyo', 'www.google.com', 0]);
+  assert.deepEqual(row, [
+    '2026-10-22T08:15:03.120Z',
+    '203.0.113.9',
+    'JP',
+    'Tokyo',
+    'Tokyo',
+    'www.google.com',
+    0,
+  ]);
 });
 
 test('buildVisitRow tolerates missing geo, self referrer, bots, and long referrers', () => {
@@ -26,10 +34,19 @@ test('buildVisitRow tolerates missing geo, self referrer, bots, and long referre
     ip: '',
     now: NOW,
   });
-  assert.deepEqual(row.slice(2, 4), [null, null]);
+  assert.deepEqual(row.slice(2, 5), [null, null, null]);
   assert.equal(row[1], 'unknown');
-  assert.equal(row[4], '(direct)');
-  assert.equal(row[5], 1);
+  assert.equal(row[5], '(direct)');
+  assert.equal(row[6], 1);
+
+  const emptyStrings = buildVisitRow({
+    headers: new Headers({ 'User-Agent': 'Mozilla/5.0 Chrome/120.0' }),
+    cf: { country: '', region: '', city: '' },
+    body: {},
+    ip: '203.0.113.9',
+    now: NOW,
+  });
+  assert.deepEqual(emptyStrings.slice(2, 5), [null, null, null]);
 
   const longRow = buildVisitRow({
     headers: new Headers({ 'User-Agent': 'Mozilla/5.0 Chrome/120.0' }),
@@ -38,7 +55,7 @@ test('buildVisitRow tolerates missing geo, self referrer, bots, and long referre
     ip: '203.0.113.9',
     now: NOW,
   });
-  assert.equal(longRow[4].length, 255);
+  assert.equal(longRow[5].length, 255);
 });
 
 test('handleCollect inserts a visit and returns 204', async () => {
@@ -52,19 +69,32 @@ test('handleCollect inserts a visit and returns 204', async () => {
   assert.equal(res.status, 204);
   assert.equal(db.calls.length, 1);
   assert.match(db.calls[0].sql, /INSERT INTO visits/);
-  assert.equal(db.calls[0].args.length, 6);
+  assert.equal(db.calls[0].args.length, 7);
   assert.equal(db.calls[0].args[1], '203.0.113.9');
-  assert.equal(db.calls[0].args[4], '(direct)');
-  assert.equal(db.calls[0].args[5], 0);
+  assert.equal(db.calls[0].args[3], 'Tokyo');
+  assert.equal(db.calls[0].args[5], '(direct)');
+  assert.equal(db.calls[0].args[6], 0);
 });
 
 test('handleCollect flags bots without storing the UA', async () => {
   const db = mockDb();
   const req = jsonRequest('https://w.dev/collect', {}, { headers: { 'User-Agent': 'Googlebot/2.1' } });
   await handleCollect(req, { ...ENV, DB: db }, CF, NOW);
-  assert.equal(db.calls[0].args[5], 1);
-  assert.equal(db.calls[0].args.length, 6);
+  assert.equal(db.calls[0].args[6], 1);
+  assert.equal(db.calls[0].args.length, 7);
   assert.doesNotMatch(db.calls[0].sql, /ua/i);
+});
+
+test('handleCollect rejects declared oversized bodies before reading them', async () => {
+  const db = mockDb();
+  const req = jsonRequest(
+    'https://w.dev/collect',
+    { referrer: '' },
+    { headers: { 'Content-Length': '4000' } }
+  );
+  const res = await handleCollect(req, { ...ENV, DB: db }, CF, NOW);
+  assert.equal(res.status, 204);
+  assert.equal(db.calls.length, 0);
 });
 
 test('handleCollect is inert for oversized or malformed bodies', async () => {
