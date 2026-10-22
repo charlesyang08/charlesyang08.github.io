@@ -1,0 +1,14 @@
+name = "visitor-stats"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://charlesyang08.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "visitor_stats"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[triggers]
+crons = ["0 3 * * *"]
