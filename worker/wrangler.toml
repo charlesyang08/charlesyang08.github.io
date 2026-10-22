@@ -8,7 +8,7 @@ ALLOWED_ORIGIN = "https://charlesyang08.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "visitor_stats"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "217a1595-0a5c-4060-b539-1faecd58dfca"
 
 [triggers]
 crons = ["0 3 * * *"]

@@ -1,5 +1,5 @@
 export const STORAGE_KEY = 'visitor_stats_key';
-export const STATS_ENDPOINT = 'https://visitor-stats.example.workers.dev/stats';
+export const STATS_ENDPOINT = 'https://visitor-stats.jamestyang2010.workers.dev/stats';
 
 const TZ_NOTE = 'Daily buckets in Asia/Shanghai (UTC+8)';
 
